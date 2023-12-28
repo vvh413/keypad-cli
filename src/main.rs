@@ -20,7 +20,10 @@ fn main() -> Result<()> {
   .map(|(i, key)| if i < args.len() { args[i] } else { *key as u8 })
   .collect();
   device.write(&buf)?;
-  println!("flashed: {:?}", buf);
+  println!("flashed");
+  buf
+    .iter()
+    .for_each(|keycode| println!(" {:?}", KeyboardUsage::from(*keycode)));
 
   Ok(())
 }
