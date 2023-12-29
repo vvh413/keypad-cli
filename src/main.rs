@@ -1,29 +1,35 @@
 use anyhow::Result;
 use usbd_hid::descriptor::KeyboardUsage;
 
+const DEFAULT: [u16; 4] = [
+  KeyboardUsage::KeyboardF13 as u16,
+  KeyboardUsage::KeyboardF14 as u16,
+  KeyboardUsage::KeyboardF15 as u16,
+  KeyboardUsage::KeyboardF16 as u16,
+];
+
 fn main() -> Result<()> {
   let api = hidapi::HidApi::new()?;
   let device = api.open(0x7668, 0x0001)?;
 
-  let args: Vec<u8> = std::env::args()
+  let (modifiers, keys): (Vec<u8>, Vec<u8>) = std::env::args()
     .skip(1)
-    .map(|arg| u8::from_str_radix(&arg, 16).unwrap())
-    .collect();
-  let buf: Vec<u8> = [
-    KeyboardUsage::KeyboardF13,
-    KeyboardUsage::KeyboardF14,
-    KeyboardUsage::KeyboardF15,
-    KeyboardUsage::KeyboardF16,
-  ]
-  .iter()
-  .enumerate()
-  .map(|(i, key)| if i < args.len() { args[i] } else { *key as u8 })
-  .collect();
-  device.write(&buf)?;
+    .take(4)
+    .zip(DEFAULT)
+    .map(|(arg, default)| {
+      let key = u16::from_str_radix(&arg, 16).unwrap_or(default);
+      ((key >> 8) as u8, (key & 0xff) as u8)
+    })
+    .unzip();
+  assert_eq!(modifiers.len(), 4, "invalid argument count");
+
+  device.write(&[keys.clone(), modifiers.clone()].concat())?;
+
   println!("flashed");
-  buf
+  modifiers
     .iter()
-    .for_each(|keycode| println!(" {:?}", KeyboardUsage::from(*keycode)));
+    .zip(keys)
+    .for_each(|(modifier, key)| println!(" {:08b} {:?}", modifier, KeyboardUsage::from(key)));
 
   Ok(())
 }
