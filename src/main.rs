@@ -23,7 +23,7 @@ fn main() -> Result<()> {
     .unzip();
   assert_eq!(modifiers.len(), 4, "invalid argument count");
 
-  device.write(&[types.clone(), keys.clone(), modifiers.clone()].concat())?;
+  device.write(&[vec![0], types.clone(), keys.clone(), modifiers.clone()].concat())?;
 
   println!("flashed");
   types
