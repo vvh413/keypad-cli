@@ -29,7 +29,7 @@ fn main() -> Result<()> {
   modifiers
     .iter()
     .zip(keys)
-    .for_each(|(modifier, key)| println!(" {:08b} {:?}", modifier, KeyboardUsage::from(key)));
+    .for_each(|(modifier, key)| println!(" {modifier:08b} {key:02x} {:?}", KeyboardUsage::from(key)));
 
   Ok(())
 }
